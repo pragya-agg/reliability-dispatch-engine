@@ -7,3 +7,5 @@ matplotlib
 pyarrow
 streamlit
 pytest
+fastapi
+uvicorn

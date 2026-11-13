@@ -12,8 +12,10 @@ Tested on two public, real-world datasets: human couriers (LaDe-P) and AI agents
 | Reliability model for AI agents (task resolved or not) | Done |
 | Capacity- and cost-aware optimal assignment + baselines | Done |
 | Assignment experiment with confidence intervals | Done |
-| Dashboard (4 tabs) | Done |
-| Unit tests (assignment correctness, leakage check) | Done |
+| Analysis dashboard (Streamlit, 4 tabs) | Done |
+| Live dispatch engine with online learning | Done |
+| Live control room (web): agent dispatch, courier risk monitor, evidence | Done |
+| Unit tests (assignment, leakage, live engine) | Done |
 | Better task features, ablation study, final report | To do |
 | Robot workers | Out of scope (no public outcome data found) |
 
@@ -43,6 +45,19 @@ tasks. Share of tasks actually resolved (300 pools per row):
 | 10 | 1.0 | 52.3% | 52.3% | 54.9% | 84.4% | +2.5 pts (1.2 to 3.7) |
 | 10 | 2.0 | 51.9% | 66.6% | 67.6% | 84.7% | +1.0 pts (0.4 to 1.7) |
 
+**Live dispatch replay, AI agents** — the model is trained on the oldest 300 tasks; the newest 200 tasks
+arrive one by one. 8 agents with 2 parallel jobs each; dispatch rounds every 30 min. 200 replays per load
+level (new agent pool and arrival stream each time). Share of tasks actually resolved:
+
+| Load | Random | Best track record first | Model + optimal | Model + online learning | Oracle | Model − track record (95% CI) | Learning − model (95% CI) |
+|---|---|---|---|---|---|---|---|
+| 0.6 | 49.8% | 52.4% | 53.3% | 53.2% | 79.6% | +0.4 to +1.4 pts | −0.5 to +0.3 pts |
+| 0.9 | 49.9% | 50.8% | 52.0% | 52.0% | 79.6% | +0.8 to +1.7 pts | −0.4 to +0.4 pts |
+| 1.2 | 49.9% | 49.7% | 52.2% | 52.1% | 79.6% | +2.1 to +3.0 pts | −0.5 to +0.3 pts |
+
+In the replay, real: tasks, their order, every agent's outcome on every task. Assumed: arrival timing, work
+time (from the SWE-bench difficulty label, an estimated human fix time) and the parallel-job limit.
+
 Full tables are in `results/`.
 
 ## Limitations
@@ -57,6 +72,8 @@ Full tables are in `results/`.
 - The SWE-bench "chronological" split orders tasks by issue date, not by when agents ran.
 - Agent submissions that skipped a task count as failures. Many submissions share the same underlying model.
 - The cost slider in the dashboard uses an assumed cost (no real price data).
+- Online learning during the live replay (updating each agent's caliber per repository) adds no measurable gain over the trained model.
+- The courier monitor replays real days and flags risky jobs; it does not re-dispatch them, because the outcome of giving a job to a different courier is not recorded.
 - Adding text-similarity features (TF-IDF nearest tasks) was tried and did not improve agent selection.
 
 ## Run
@@ -65,7 +82,8 @@ Full tables are in `results/`.
 python -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python run_all.py          # rebuild every result (about 3 minutes)
 .venv/bin/python -m pytest -q tests  # tests
-.venv/bin/streamlit run app.py       # dashboard
+.venv/bin/python server.py           # live control room: http://localhost:8000
+.venv/bin/streamlit run app.py       # analysis dashboard
 ```
 
 ## Data (not committed; place under `data/raw/`)
@@ -83,7 +101,11 @@ src/swebench_data.py    agent x task outcome table
 src/train_swebench.py   task-success model, agent selection without capacity limits
 src/assignment.py       optimal assignment under capacity and cost, plus baselines
 src/run_assignment.py   capacity-limited assignment experiment
-app.py                  dashboard
+src/live_dispatch.py    live dispatch engine (agents) with online learning + evaluation
+src/live_couriers.py    live risk monitor (couriers), real day replay
+server.py               web server for the control room
+web/                    control room page (HTML/CSS/JS, no external libraries)
+app.py                  analysis dashboard (Streamlit)
 run_all.py              rebuilds every result
 tests/                  unit tests
 docs/                   synopsis
