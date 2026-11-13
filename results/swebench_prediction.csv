@@ -1,0 +1,7 @@
+scheme,model,roc_auc,pr_auc,log_loss
+chronological (newest 25% tasks),Constant (base rate),0.5,0.5070222222222223,0.6933488149418422
+chronological (newest 25% tasks),Agent overall rate only,0.6981967890803037,0.6642948858677713,0.6228284526258248
+chronological (newest 25% tasks),XGBoost (agent history + task),0.7540793306141542,0.7352719587504682,0.5916788578033447
+random 5-fold over tasks,Constant (base rate),0.4822747090116958,0.5054760854021664,0.6929089549908757
+random 5-fold over tasks,Agent overall rate only,0.7164527920933907,0.6938589364611782,0.6096636754317422
+random 5-fold over tasks,XGBoost (agent history + task),0.7766057175796808,0.7615848674220911,0.5625690817832947
