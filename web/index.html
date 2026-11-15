@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dispatch Control Room</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Dispatch Control Room</h1>
+    <p class="sub">AI-Driven Workforce Dispatch &amp; Reliability Engine · replaying real recorded jobs</p>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" data-tab="requests">Service requests</button>
+    <button class="tab active" data-tab="agents">AI agent dispatch</button>
+    <button class="tab" data-tab="couriers">Courier risk monitor</button>
+    <button class="tab" data-tab="evidence">Evidence</button>
+  </nav>
+</header>
+<div id="error" class="error" hidden></div>
+
+<!-- ===================== SERVICE REQUESTS ===================== -->
+<main id="tab-requests" class="tabpanel" hidden>
+  <section class="card controls">
+    <div class="transport">
+      <a class="btn primary" href="/portal" target="_blank" rel="noopener">Open customer portal ↗</a>
+      <label>Speed <select id="r-speed">
+        <option value="0.5">0.5 min/s</option><option value="2" selected>2 min/s</option><option value="5">5 min/s</option><option value="20">20 min/s</option></select></label>
+      <label><input type="checkbox" id="r-auto" checked> Background customers</label>
+      <label>per hour <input id="r-rate" type="number" min="0" max="120" value="8" style="width:70px"></label>
+      <button id="r-reset" class="btn">Reset</button>
+      <span class="clock" id="r-clock">—</span>
+    </div>
+    <p class="hint" style="margin:8px 0 0">Requests from the customer portal arrive here live. Requests from your own portal tab are outlined in purple; background customers are simulated.</p>
+  </section>
+  <section class="strip" id="r-strip"></section>
+  <section class="strip" id="r-types"></section>
+  <section class="grid-2">
+    <div class="card">
+      <h2>Live request board</h2>
+      <div class="board">
+        <div class="col"><h3>Waiting</h3><div id="r-waiting"></div></div>
+        <div class="col"><h3>In progress</h3><div id="r-progress"></div></div>
+        <div class="col"><h3>Recently closed</h3><div id="r-closed"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Dispatch decision</h2>
+      <div id="r-inspect" class="inspect"><p class="hint">Click a request to see who was considered and why the chosen worker won.</p></div>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Workforce roster</h2>
+    <p class="hint">Green = free, orange = busy. Caliber = predicted chance of completing that service successfully.</p>
+    <div id="r-roster" class="roster"></div>
+  </section>
+  <section class="card about">
+    <h2>What is measured and what is simulated</h2>
+    <ul>
+      <li><b>Fix a software bug</b>: AI agents are 8 real SWE-bench Verified agents. Each request is matched to a recorded task the model never trained on; caliber is the model's prediction, and the result is the agent's recorded result. Human developers are simulated.</li>
+      <li><b>Parcel pickup</b>: couriers are 8 real LaDe-P couriers; caliber = 1 − their average predicted late risk on a real day. Whether this pickup is on time is simulated from it. Delivery robots are simulated.</li>
+      <li><b>Everything else</b>, plus costs, capacities and work times, is simulated from the assumptions below.</li>
+    </ul>
+    <div id="r-assume"></div>
+  </section>
+</main>
+
+<!-- ===================== AI AGENTS ===================== -->
+<main id="tab-agents" class="tabpanel">
+  <section class="card controls">
+    <div class="transport">
+      <button id="a-play" class="btn primary">▶ Play</button>
+      <button id="a-step" class="btn">Step 30 min</button>
+      <label>Speed <select id="a-speed">
+        <option value="10">10 min/s</option><option value="30" selected>30 min/s</option>
+        <option value="60">1 h/s</option><option value="180">3 h/s</option></select></label>
+      <span class="clock" id="a-clock">—</span>
+    </div>
+    <details class="settings">
+      <summary>Settings</summary>
+      <div class="form">
+        <label>Agents in pool <input id="a-pool" type="number" min="3" max="16" value="8"></label>
+        <label>Parallel jobs per agent <input id="a-slots" type="number" min="1" max="4" value="2"></label>
+        <label>Load (share of busy slots) <input id="a-load" type="number" min="0.3" max="1.5" step="0.1" value="0.9"></label>
+        <label>Dispatch every (min) <input id="a-batch" type="number" min="5" max="120" step="5" value="30"></label>
+        <label>Random seed <input id="a-seed" type="number" min="0" max="99999" value="1"></label>
+        <button id="a-reset" class="btn">Apply &amp; restart</button>
+      </div>
+    </details>
+  </section>
+
+  <section class="strip" id="a-strip"></section>
+  <div class="progress"><div id="a-progress"></div></div>
+
+  <section class="grid-3">
+    <div class="card">
+      <h2>Incoming queue <span class="count" id="a-qcount">0</span></h2>
+      <p class="hint">Waiting for the next dispatch round. Click a job to inspect it.</p>
+      <div id="a-queue" class="list"></div>
+    </div>
+    <div class="card">
+      <h2>Workforce <span class="hint inline">the “Model + online learning” dispatcher</span></h2>
+      <div id="a-agents" class="agents"></div>
+    </div>
+    <div class="card">
+      <h2>Live dispatch feed</h2>
+      <div id="a-feed" class="feed"></div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="card">
+      <h2>Scoreboard: four dispatchers, same jobs</h2>
+      <p class="hint">All four handle the identical stream of jobs in parallel. Success = the assigned agent really resolved the task (recorded outcome).</p>
+      <div id="a-score"></div>
+      <canvas id="a-chart" height="220"></canvas>
+    </div>
+    <div class="card">
+      <h2>Inspector</h2>
+      <div id="a-inspect" class="inspect"><p class="hint">Click a job in the queue or feed, or an agent card.</p></div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="card">
+      <h2>What if a new job arrives?</h2>
+      <p class="hint">Scores a job that is not in the data. No outcome exists for it, so this shows only the model's ranking.</p>
+      <div class="form">
+        <label>Repository <select id="w-repo"></select></label>
+        <label>Difficulty <select id="w-diff"></select></label>
+        <label>Description length (chars) <input id="w-len" type="number" value="1500" min="50" max="50000"></label>
+        <button id="w-go" class="btn">Rank agents</button>
+      </div>
+      <div id="w-out"></div>
+    </div>
+    <div class="card about">
+      <h2>How it works</h2>
+      <ol>
+        <li><b>Train.</b> An XGBoost reliability model learns each agent's chance of resolving a task from <span id="m-train"></span>.</li>
+        <li><b>Replay.</b> The newest <span id="m-replay"></span> SWE-bench Verified tasks, which the model never saw, arrive one by one in their real order.</li>
+        <li><b>Caliber.</b> For every waiting job the dispatcher scores every agent. The learning dispatcher also updates each agent's caliber per repository as results come in.</li>
+        <li><b>Dispatch.</b> Every round, waiting jobs are matched to free slots by optimal assignment (maximum total caliber).</li>
+        <li><b>Outcome.</b> When the work time ends, the agent's <i>recorded</i> result on that task decides success.</li>
+      </ol>
+      <p class="hint"><b>Real:</b> tasks, task order, every agent's outcome on every task. <b>Assumed:</b> arrival timing, work time (from the SWE-bench difficulty label, an estimated human fix time) and parallel-job limits.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== COURIERS ===================== -->
+<main id="tab-couriers" class="tabpanel" hidden>
+  <section class="card controls">
+    <div class="transport">
+      <button id="c-play" class="btn primary">▶ Play</button>
+      <label>Speed <select id="c-speed">
+        <option value="10">10 min/s</option><option value="30" selected>30 min/s</option>
+        <option value="60">1 h/s</option><option value="180">3 h/s</option></select></label>
+      <label>City <select id="c-city"></select></label>
+      <button id="c-reset" class="btn">Restart day</button>
+      <span class="clock" id="c-clock">—</span>
+    </div>
+  </section>
+  <section class="strip" id="c-strip"></section>
+  <section class="grid-map">
+    <div class="card">
+      <h2>Live pickup map <span class="hint inline" id="c-mapnote"></span></h2>
+      <canvas id="c-map" height="460"></canvas>
+      <div class="legend">
+        <span><i class="dot open"></i>open job</span><span><i class="dot flag"></i>open, high risk</span>
+        <span><i class="dot ok"></i>picked up on time</span><span><i class="dot late"></i>late</span>
+        <span><i class="dot overdue"></i>overdue now</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Alerts <select id="c-filter" class="mini"><option value="alerts">alerts only</option><option value="all">all events</option></select></h2>
+      <div id="c-feed" class="feed tall"></div>
+    </div>
+  </section>
+  <section class="grid-2">
+    <div class="card">
+      <h2>Courier watchlist</h2>
+      <p class="hint">Couriers holding open high-risk or overdue jobs right now.</p>
+      <div id="c-watch"></div>
+    </div>
+    <div class="card">
+      <h2>Late pickups vs. caught by the risk flag</h2>
+      <canvas id="c-chart" height="220"></canvas>
+      <p class="hint" id="c-note"></p>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== EVIDENCE ===================== -->
+<main id="tab-evidence" class="tabpanel" hidden>
+  <section class="card">
+    <h2>Live dispatch: 200 full replays per load level</h2>
+    <p class="hint">Each replay draws a new pool of 8 agents and a new arrival stream. Differences are shown with 95% confidence intervals.</p>
+    <div id="e-live"></div>
+  </section>
+  <section class="card"><h2>Human couriers: late-pickup prediction (test period)</h2><div id="e-couriers"></div></section>
+  <section class="card"><h2>AI agents: task-success prediction</h2><div id="e-agents"></div></section>
+  <section class="card"><h2>Capacity-limited batch assignment (500 tasks, 300 pools per row)</h2><div id="e-assign"></div></section>
+  <section class="card about">
+    <h2>Limitations</h2>
+    <ul>
+      <li>Gains from model-based dispatch are real but small: about 1 to 2.5 points over the best-track-record rule, far below the oracle.</li>
+      <li>Online learning during the replay did not add a measurable gain over the trained model.</li>
+      <li>Couriers are monitored, not re-dispatched: the outcome of giving a job to a different courier is not recorded.</li>
+      <li>Humans and AI agents come from separate datasets; routing one job between a human and an agent is not tested. Robots are out of scope.</li>
+    </ul>
+  </section>
+</main>
+<script src="/static/app.js"></script>
+<script src="/static/requests.js"></script>
+</body>
+</html>

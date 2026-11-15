@@ -1,0 +1,17 @@
+scheme,pool,method,success_rate,model_minus_best_overall,ci_low,ci_high
+chronological (newest 25% tasks),5 agents,random,0.508096,-0.0001200000000000031,-0.003601000000000004,0.0032799999999999986
+chronological (newest 25% tasks),5 agents,best-overall agent,0.6838799999999999,-0.0001200000000000031,-0.003601000000000004,0.0032799999999999986
+chronological (newest 25% tasks),5 agents,model pick,0.6837599999999999,-0.0001200000000000031,-0.003601000000000004,0.0032799999999999986
+chronological (newest 25% tasks),5 agents,oracle (any can solve),0.7611999999999999,-0.0001200000000000031,-0.003601000000000004,0.0032799999999999986
+chronological (newest 25% tasks),135 agents,random,0.5070222222222223,0.008,-0.016,0.04
+chronological (newest 25% tasks),135 agents,best-overall agent,0.76,0.008,-0.016,0.04
+chronological (newest 25% tasks),135 agents,model pick,0.768,0.008,-0.016,0.04
+chronological (newest 25% tasks),135 agents,oracle (any can solve),0.92,0.008,-0.016,0.04
+random 5-fold over tasks,5 agents,random,0.5163300000000001,-0.002629999999999999,-0.004060249999999999,-0.0010200000000000003
+random 5-fold over tasks,5 agents,best-overall agent,0.7148399999999999,-0.002629999999999999,-0.004060249999999999,-0.0010200000000000003
+random 5-fold over tasks,5 agents,model pick,0.7122099999999999,-0.002629999999999999,-0.004060249999999999,-0.0010200000000000003
+random 5-fold over tasks,5 agents,oracle (any can solve),0.7930499999999999,-0.002629999999999999,-0.004060249999999999,-0.0010200000000000003
+random 5-fold over tasks,135 agents,random,0.5162074074074073,0.024,0.004,0.044
+random 5-fold over tasks,135 agents,best-overall agent,0.778,0.024,0.004,0.044
+random 5-fold over tasks,135 agents,model pick,0.802,0.024,0.004,0.044
+random 5-fold over tasks,135 agents,oracle (any can solve),0.942,0.024,0.004,0.044

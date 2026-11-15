@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Service Request Portal</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Service Request Portal</h1>
+    <p class="sub">Ask for a service. The dispatch engine picks the most reliable available human, AI agent or robot.</p>
+  </div>
+  <nav class="tabs"><a class="tab" href="/#requests" target="_blank" rel="noopener">Open control room ↗</a></nav>
+</header>
+<div id="error" class="error" hidden></div>
+<main class="tabpanel">
+  <section class="card demo-note">
+    <b>Demo.</b> Services marked <span class="badge measured">measured</span> use real recorded workers; <span class="badge partly">partly measured</span> uses real reliability with a simulated outcome; <span class="badge simulated">simulated</span> uses made-up profiles. Every result says where it came from.
+    <span class="clock" id="p-clock"></span>
+  </section>
+
+  <section class="card">
+    <h2>1. Choose a service</h2>
+    <div id="p-catalog" class="catalog"></div>
+  </section>
+
+  <section class="card" id="p-form-card" hidden>
+    <h2>2. Your request: <span id="p-svc-name"></span></h2>
+    <p class="hint" id="p-svc-note"></p>
+    <div class="form">
+      <label>Your name <input id="p-name" maxlength="40" value="Customer"></label>
+      <label>Priority <select id="p-priority">
+        <option value="quality">Best quality</option><option value="balanced" selected>Balanced</option><option value="cost">Lowest cost</option></select></label>
+      <label id="p-repo-wrap" hidden>Software project <select id="p-repo"></select></label>
+      <label id="p-diff-wrap" hidden>Size of the fix <select id="p-diff"></select></label>
+    </div>
+    <div class="who">
+      <span class="hint inline">Who should do it?</span>
+      <div id="p-pref" class="seg"></div>
+    </div>
+    <button id="p-submit" class="btn primary">Submit request</button>
+  </section>
+
+  <section class="card">
+    <h2>3. My requests <span class="count" id="p-count">0</span></h2>
+    <div id="p-mine" class="mine"><p class="hint">Nothing yet. Submit a request above.</p></div>
+  </section>
+</main>
+<script src="/static/portal.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+load,runs,random,track record,model,learning,oracle,avg_wait_min,model - track record,model - track record (95% CI),learning - track record,learning - track record (95% CI),learning - model,learning - model (95% CI)
+0.6,200,0.498,0.5241,0.5332,0.5323,0.7964,24.3662,0.009,+0.004 to +0.014,0.0081,+0.003 to +0.013,-0.0009,-0.005 to +0.003
+0.9,200,0.499,0.5078,0.52,0.5196,0.7964,98.0785,0.0122,+0.008 to +0.017,0.0117,+0.007 to +0.016,-0.0005,-0.004 to +0.004
+1.2,200,0.4988,0.4967,0.5217,0.5207,0.7964,155.1848,0.025,+0.021 to +0.030,0.024,+0.019 to +0.029,-0.001,-0.005 to +0.003

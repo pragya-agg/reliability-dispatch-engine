@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+data/raw/
+data/job_logs.csv
+*.zip
+.DS_Store
+data/*.parquet
+.pytest_cache/
+.claude/
