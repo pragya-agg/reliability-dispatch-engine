@@ -6,3 +6,4 @@ data/job_logs.csv
 .DS_Store
 data/*.parquet
 .pytest_cache/
+.claude/
