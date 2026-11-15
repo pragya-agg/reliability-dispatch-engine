@@ -13,12 +13,59 @@
     <p class="sub">AI-Driven Workforce Dispatch &amp; Reliability Engine · replaying real recorded jobs</p>
   </div>
   <nav class="tabs" role="tablist">
+    <button class="tab" data-tab="requests">Service requests</button>
     <button class="tab active" data-tab="agents">AI agent dispatch</button>
     <button class="tab" data-tab="couriers">Courier risk monitor</button>
     <button class="tab" data-tab="evidence">Evidence</button>
   </nav>
 </header>
 <div id="error" class="error" hidden></div>
+
+<!-- ===================== SERVICE REQUESTS ===================== -->
+<main id="tab-requests" class="tabpanel" hidden>
+  <section class="card controls">
+    <div class="transport">
+      <a class="btn primary" href="/portal" target="_blank" rel="noopener">Open customer portal ↗</a>
+      <label>Speed <select id="r-speed">
+        <option value="0.5">0.5 min/s</option><option value="2" selected>2 min/s</option><option value="5">5 min/s</option><option value="20">20 min/s</option></select></label>
+      <label><input type="checkbox" id="r-auto" checked> Background customers</label>
+      <label>per hour <input id="r-rate" type="number" min="0" max="120" value="8" style="width:70px"></label>
+      <button id="r-reset" class="btn">Reset</button>
+      <span class="clock" id="r-clock">—</span>
+    </div>
+    <p class="hint" style="margin:8px 0 0">Requests from the customer portal arrive here live. Requests from your own portal tab are outlined in purple; background customers are simulated.</p>
+  </section>
+  <section class="strip" id="r-strip"></section>
+  <section class="strip" id="r-types"></section>
+  <section class="grid-2">
+    <div class="card">
+      <h2>Live request board</h2>
+      <div class="board">
+        <div class="col"><h3>Waiting</h3><div id="r-waiting"></div></div>
+        <div class="col"><h3>In progress</h3><div id="r-progress"></div></div>
+        <div class="col"><h3>Recently closed</h3><div id="r-closed"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Dispatch decision</h2>
+      <div id="r-inspect" class="inspect"><p class="hint">Click a request to see who was considered and why the chosen worker won.</p></div>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Workforce roster</h2>
+    <p class="hint">Green = free, orange = busy. Caliber = predicted chance of completing that service successfully.</p>
+    <div id="r-roster" class="roster"></div>
+  </section>
+  <section class="card about">
+    <h2>What is measured and what is simulated</h2>
+    <ul>
+      <li><b>Fix a software bug</b>: AI agents are 8 real SWE-bench Verified agents. Each request is matched to a recorded task the model never trained on; caliber is the model's prediction, and the result is the agent's recorded result. Human developers are simulated.</li>
+      <li><b>Parcel pickup</b>: couriers are 8 real LaDe-P couriers; caliber = 1 − their average predicted late risk on a real day. Whether this pickup is on time is simulated from it. Delivery robots are simulated.</li>
+      <li><b>Everything else</b>, plus costs, capacities and work times, is simulated from the assumptions below.</li>
+    </ul>
+    <div id="r-assume"></div>
+  </section>
+</main>
 
 <!-- ===================== AI AGENTS ===================== -->
 <main id="tab-agents" class="tabpanel">
@@ -166,5 +213,6 @@
   </section>
 </main>
 <script src="/static/app.js"></script>
+<script src="/static/requests.js"></script>
 </body>
 </html>

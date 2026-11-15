@@ -15,7 +15,8 @@ Tested on two public, real-world datasets: human couriers (LaDe-P) and AI agents
 | Analysis dashboard (Streamlit, 4 tabs) | Done |
 | Live dispatch engine with online learning | Done |
 | Live control room (web): agent dispatch, courier risk monitor, evidence | Done |
-| Unit tests (assignment, leakage, live engine) | Done |
+| Customer service portal + live service-request board (humans, AI agents, robots) | Done (demo, partly simulated) |
+| Unit tests (assignment, leakage, live engine, portal) | Done |
 | Better task features, ablation study, final report | To do |
 | Robot workers | Out of scope (no public outcome data found) |
 
@@ -60,6 +61,22 @@ time (from the SWE-bench difficulty label, an estimated human fix time) and the 
 
 Full tables are in `results/`.
 
+## Service portal demo (how it would look in the real world)
+
+Open `http://localhost:8000/portal` as the customer and `http://localhost:8000/#requests` as the control room,
+side by side. A customer picks a service, can say who should do it (any / human / AI agent / robot) and a
+priority (quality, balanced, cost). The control room scores every eligible worker, gives the job to the
+best free one, shows why, and re-dispatches once to the next best worker if the first attempt fails.
+
+| Service | Workers | What is real |
+|---|---|---|
+| Fix a software bug | 8 AI agents, 3 developers | Agents are real SWE-bench Verified submissions; each request is matched to a recorded task the model never trained on, so caliber is the model's prediction and the result is the **recorded** result. Developers are simulated. |
+| Parcel pickup | 8 couriers, 3 delivery robots | Couriers are real LaDe-P couriers with measured reliability; the outcome of this pickup is simulated from it. Robots are simulated. |
+| IT support, scheduling, plumbing, warehouse picking, inspection | humans, assistant agents, robots | Everything simulated from an assumption table shown in the control room. |
+
+Costs, capacities and work times are assumptions. This page is a demonstration of the system design, not
+evidence; the evidence is in the results above.
+
 ## Limitations
 
 - For couriers, the model barely beats the courier's own past late rate.
@@ -103,8 +120,9 @@ src/assignment.py       optimal assignment under capacity and cost, plus baselin
 src/run_assignment.py   capacity-limited assignment experiment
 src/live_dispatch.py    live dispatch engine (agents) with online learning + evaluation
 src/live_couriers.py    live risk monitor (couriers), real day replay
+src/portal.py           service portal engine: workers, eligibility, assignment, outcomes
 server.py               web server for the control room
-web/                    control room page (HTML/CSS/JS, no external libraries)
+web/                    control room (index.html) and customer portal (portal.html), no external libraries
 app.py                  analysis dashboard (Streamlit)
 run_all.py              rebuilds every result
 tests/                  unit tests

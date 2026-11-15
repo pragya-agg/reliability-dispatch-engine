@@ -1,7 +1,10 @@
 """Live dispatch control room.   Run:  .venv/bin/python server.py   then open http://localhost:8000"""
 import itertools
 import os
+import threading
 from collections import OrderedDict
+from contextlib import asynccontextmanager
+from typing import Literal, Optional
 
 import pandas as pd
 import uvicorn
@@ -12,10 +15,31 @@ from pydantic import BaseModel, Field
 
 from src.live_couriers import CODE, CourierMonitor, risk_threshold
 from src.live_dispatch import DIFF_LABEL, POLICIES, POLICY_LABEL, LiveDispatch, ReliabilityModel, short_name
+from src.portal import Portal, run_clock
 
-app = FastAPI(title="Workforce Dispatch & Reliability Engine")
-app.mount("/static", StaticFiles(directory="web"), name="static")
 RM = ReliabilityModel()
+PORTAL = Portal(RM)
+_STOP = threading.Event()
+
+
+@asynccontextmanager
+async def lifespan(_app):
+    threading.Thread(target=run_clock, args=(PORTAL, _STOP), daemon=True).start()
+    yield
+    _STOP.set()
+
+
+app = FastAPI(title="Workforce Dispatch & Reliability Engine", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="web"), name="static")
+
+
+@app.middleware("http")
+async def no_stale_pages(request, call_next):
+    """Make browsers re-check the page files, so an edit never shows up half-applied."""
+    response = await call_next(request)
+    if not request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 THRESHOLD = risk_threshold()
 SESSIONS: "OrderedDict[str, object]" = OrderedDict()
 _ids = itertools.count(1)
@@ -110,6 +134,64 @@ def couriers_new(city: str = "Shanghai"):
 @app.post("/api/couriers/{sid}/step")
 def couriers_step(sid: str, minutes: int = 5):
     return _get(sid, CourierMonitor).step(max(1, min(minutes, 600)))
+
+
+# ---------------------------------------------------------------- service portal
+class ServiceRequest(BaseModel):
+    customer: str = Field("Customer", min_length=1, max_length=40)
+    service: str
+    preference: Literal["any", "human", "agent", "robot"] = "any"
+    priority: Literal["quality", "balanced", "cost"] = "balanced"
+    repo: Optional[str] = None
+    difficulty: int = Field(1, ge=0, le=3)
+    client: Optional[str] = Field(None, max_length=64)
+
+
+class PortalSettings(BaseModel):
+    speed: Optional[float] = Field(None, ge=0.5, le=60)
+    auto: Optional[bool] = None
+    rate: Optional[float] = Field(None, ge=0, le=120)
+
+
+@app.get("/portal")
+def portal_page():
+    return FileResponse("web/portal.html")
+
+
+@app.get("/api/portal/catalog")
+def portal_catalog():
+    return PORTAL.catalog()
+
+
+@app.post("/api/portal/request")
+def portal_request(req: ServiceRequest):
+    try:
+        return {"id": PORTAL.submit(**req.model_dump())}
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.get("/api/portal/state")
+def portal_state(client: Optional[str] = None):
+    return PORTAL.state(client=client)
+
+
+@app.post("/api/portal/settings")
+def portal_settings(s: PortalSettings):
+    with PORTAL.lock:
+        for k, v in s.model_dump().items():
+            if v is not None:
+                setattr(PORTAL, k, v)
+    return {"speed": PORTAL.speed, "auto": PORTAL.auto, "rate": PORTAL.rate}
+
+
+@app.post("/api/portal/reset")
+def portal_reset():
+    global PORTAL
+    with PORTAL.lock:
+        fresh = Portal(RM)
+        PORTAL.__dict__.update({k: v for k, v in fresh.__dict__.items() if k != "lock"})
+    return {"ok": True}
 
 
 if __name__ == "__main__":
